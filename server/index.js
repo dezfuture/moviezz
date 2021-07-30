@@ -19,6 +19,17 @@ app.use(cookieParser());
 const CONNECTION_URL = config.mongoURI;
 const PORT = process.env.PORT || 5000;
 
+mongoose
+  .connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() =>
+    app.listen(PORT, () =>
+      console.log(`Server Running on Port: http://localhost:${PORT}`)
+    )
+  )
+  .catch((error) => console.log(error.message));
+
+mongoose.set("useFindAndModify", false);
+
 // checking whether our database is set up correctly
 app.get("/", (req, res) => {
   res.send("happy coding!");
@@ -70,13 +81,11 @@ app.post("/api/user/login", (req, res) => {
   });
 });
 
-mongoose
-  .connect(CONNECTION_URL, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() =>
-    app.listen(PORT, () =>
-      console.log(`Server Running on Port: http://localhost:${PORT}`)
-    )
-  )
-  .catch((error) => console.log(error.message));
-
-mongoose.set("useFindAndModify", false);
+app.get("/api/user/logout", auth, (req, res) => {
+  User.findOneAndUpdate({ _id: req.user._id }, { token: "" }, (err, doc) => {
+    if (err) {
+      return res.json({ success: false, err });
+    }
+    return res.status(200).send({ success: true });
+  });
+});
